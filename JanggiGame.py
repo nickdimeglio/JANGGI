@@ -4,48 +4,43 @@
 
 
 class Piece:
-	"""A class for pieces"""
+	"""A class for pieces. A dictionary of these pieces is instantiated
+	for each team when a new JanggiGame is created. This class does
+	not need to communicate with any other classes, but the legal move
+	function and the JanggiGame class will need to access rank and player,
+	so we provide getters for those private data members."""
 	def __init__(self, player, rank):
-		"""Create a piece"""
+		"""Create a piece by providing a player ('blue' or 'red') and a rank,
+		which can be any of the ranks of Janggi pieces such as 'general'
+		or 'elephant'. This function returns a Piece instance."""
 		self._player = player
 		self._rank = rank
 
 	def get_player(self):
-		"""Get a piece's player ('blue' or 'red')"""
+		"""Get a piece's player ('blue' or 'red'). No parameters, return
+		type is a string 'blue' or 'red'."""
 		return self._player
 
 	def get_rank(self):
-		"""Return a pieces' rank"""
+		"""Return a pieces' rank (for determining how it can move). No
+		parameters, return type is a string like 'general' or 'elephant'."""
 		return self._rank
 
 
-def legal_move(rank, a, b):
-	"""Return true if the given rank can move from square a to square b"""
-	if rank == 'general':
-		if a == b:
-			return True
-
-	if rank == 'guard':
-		return True
-
-	if rank == 'horse':
-		return True
-
-	if rank == 'elephant':
-		return True
-
-	if rank == 'chariot':
-		return True
-
-	if rank == 'cannon':
-		return True
-
-	if rank == 'soldier':
-		return True
-
-
 class JanggiGame:
+	"""This class creates a board represented by a dictionary whose keys
+	are squares and whose values are pieces. An empty square has the value
+	None. The JanggiGame class can get the game state (unfinished, blue_won,
+	or red_won), check if a player is in check, and check if a player is in
+	checkmate. It will also keep track of whose turn it is, starting with blue.
+	The make_move function can move a piece to a new square based on the rules
+	of Janggi. This class will need to communicate with the Piece class,
+	because certain functions (like find_general) need to access the Rank
+	data member of Piece to guide behavior."""
+
 	def __init__(self):
+		"""Instantiates a new JanggiGame. No parameters, returns
+		a new JanggiGame ready to be played."""
 		self._game_state = 'UNFINISHED'
 		self._pieces = {
 			'a1': Piece('red', 'chariot'), 'b1': Piece('red', 'elephant'),
@@ -56,17 +51,105 @@ class JanggiGame:
 		self._turn = 'blue'
 
 	def get_game_state(self):
-		"""Get the current state of the game"""
+		"""Get the current state of the game. No parameters, returns
+		one of: 'UNFINISHED', 'BLUE_WON', 'RED_WON'"""
 		return self._game_state
 
+	def legal_move(self, rank, a, b):
+		"""Return true if the given rank can move from square a to square b. It
+		is assumed that b is empty or contains a piece from the opponent of player
+		whose piece is in square a. This function is used by the JanggiGame class."""
+	
+		# Used for finding adjacent squares
+		columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
+
+		def above(square):
+			"""Returns the square above the provided square"""
+			col = square[0]
+			row = square[1]
+			if row == '1':
+				return None
+			else:
+				row = str(int(row) - 1)
+			
+			return col + row
+
+		def below(square):
+			"""Returns the square below the provided square"""
+			col = square[0]
+			row = square[1]
+
+			if row == '10':
+				return None
+			else:
+				row = str(int(row) + 1)
+
+			return col + row
+
+		def right_of(square):
+			"""Returns the square to the right of the provided square"""
+			col = square[0]
+			row = square[1]
+
+			if col == 'i':
+				return None
+			else:
+				col_index = columns.index(col)
+				col = str(columns[col_index + 1])
+			
+			return col + row
+			
+		def left_of(square):
+			"""Returns the square to the left of the provided square"""
+			col = square[0]
+			row = square[1]
+
+			if col == 'a':
+				return None
+			else:
+				col_index = columns.index(col)
+				col = columns[col_index - 1]
+			
+			return col + row
+
+		if rank == 'general':
+			#TODO implement legal general moves
+			return True
+
+		if rank == 'guard':
+			#TODO implement legal guard moves		
+			return True
+
+		if rank == 'horse':
+			#TODO implement legal horse moves
+			return True
+
+		if rank == 'elephant':
+			#TODO implement legal elephant moves
+			return True
+
+		if rank == 'chariot':
+			#TODO implement legal chariot moves
+			return True
+
+		if rank == 'cannon':
+			#TODO implement legal cannon moves
+			return True
+
+		if rank == 'soldier':
+			#TODO implement legal soldier moves
+			return True
+
 	def find_general(self, player):
-		"""Returns the square of the player's general"""
+		"""Takes a player ('blue' or 'red') as a parameter and returns
+		the name of the square which holds that player's general"""
 		for square, piece in self._pieces.items():
 			if piece.get_player() == player and piece.get_rank() == 'general':
 				return square
 
 	def is_in_check(self, player):
-		"""Returns True if the player is in check"""
+		"""Takes a player ('blue' or 'red') as a parameter and returns
+		True if that player is in check, False otherwise."""
 		if player == 'blue':
 			opponent = 'red'
 		else:
@@ -84,12 +167,14 @@ class JanggiGame:
 		return in_check
 
 	def is_in_checkmate(self, player):
+		"""Takes a player ('blue' or 'red') as a parameter and returns
+		True if that player is in checkmate, False otherwise."""
 		if player == 'blue':
 			opponent = 'red'
 		else:
 			opponent = 'blue'
 
-		hideout = self.find_general(player)
+		hideout = self.find_general(opponent)
 
 		# CHECK IF THE GENERAL IS IN CHECK
 		# CHECK IF THE GENERAL WOULD BE IN CHECK IF IT MOVED TO
@@ -98,7 +183,9 @@ class JanggiGame:
 		return False
 
 	def make_move(self, a, b):
-		"""Move the piece in square a to square b, if possible"""
+		"""Takes two strings that represent squares such as 'a2' and 'g7'
+		and moves the piece from the first square into the second square,
+		if possible. Returns true if the move is succesful, false otherwise."""
 		# Check if the game is finished
 		if self._game_state != 'UNFINISHED':
 			return False
@@ -129,4 +216,47 @@ class JanggiGame:
 					self._game_state = 'BLUE_WON'
 
 			return True
+
+
+"""
+DETAILED TEXT DESCRIPTIONS OF HOW TO HANDLE THE SCENARIOS
+1. A call to JanggiGame() instantiates a new game and initializes the board.
+The board is represented as a dictionary with keys being the squares of the
+board: 'a1', 'b1', ..., 'h10', 'i10'. The value for each key in the board
+is the piece on that space, or None if the space is empty.
+
+2. Pieces are represented at a given location through the values of the
+Board dictionary.
+
+3. Make_move first checks to be sure the game is not over, that it is the
+correct player's turn, and that there is not a piece from the same team
+in the intended square. It then calls legal_move, which validates a given move
+by comparing its start and end coordinates to the movement pattern for the
+provided piece's rank.
+
+4. If legal_move returns true, the dictionary value for the intended square
+will be set to the moved piece, regardless of what value is currently there.
+This way, if an opponent's piece was there, it will be removed from the board.
+
+5. The JanggiGame has a data member _turn which defaults to 'blue'. If
+legal_move returns True (during make_move), then _turn will be set to the
+opposite team.
+
+6. Checkmate will first check if any of opposing pieces can legally move
+to the position the General is currently in (using in_check). 
+If so, it will check to see if any of the threatened General's other pieces 
+can legally move to the threatening piece's square to save the general. 
+If not, it will then sequentially check the each square the General can 
+legally move to and check whether the General would be in check there (using 
+in_check). Thus, if the General IS in check AND none of the general's pieces 
+can take the threatening piece AND the General would be in check after all 
+possible legal moves, THEN the player is in checkmate.
+
+7. After each move, the game will see if the opposing player is in checkmate.
+If is_in_checkmate returns True, the JanggiGame's _game_state will update
+accordingly.
+"""
+
+
+
 
