@@ -16,6 +16,13 @@ class Piece:
 		self._player = player
 		self._rank = rank
 
+	def __repr__(self):
+		"""Overrides repr to provide a printable version of a piece
+		for testing. Takes no parameters and returns nothing"""
+		player = self._player[0].upper()
+		rank = self._rank[0:2].upper()
+		return repr(player + " " + rank)
+
 	def get_player(self):
 		"""Get a piece's player ('blue' or 'red'). No parameters, return
 		type is a string 'blue' or 'red'."""
@@ -25,7 +32,6 @@ class Piece:
 		"""Return a pieces' rank (for determining how it can move). No
 		parameters, return type is a string like 'general' or 'elephant'."""
 		return self._rank
-
 
 class JanggiGame:
 	"""This class creates a board represented by a dictionary whose keys
@@ -43,23 +49,58 @@ class JanggiGame:
 		a new JanggiGame ready to be played."""
 		self._game_state = 'UNFINISHED'
 		self._pieces = {
+
+			# Row 1
 			'a1': Piece('red', 'chariot'), 'b1': Piece('red', 'elephant'),
 			'c1': Piece('red', 'horse'), 'd1': Piece('red', 'guard'), 'e1': None,
 			'f1': Piece('red', 'guard'), 'g1': Piece('red', 'elephant'),
+			'h1': Piece('red', 'horse'), 'i1': Piece('red', 'chariot'),
+
+			# Row 2
+			'a2': None, 'b2': None, 'c2': None, 'd2': None,
+			'e2': Piece('red', 'general'), 'f2': None, 'g2': None, 'h2': None,
+			'i2': None,
+
+			# Row 3
+			'a3': None, 'b3': Piece('red', 'cannon'), 'c3': None, 'd3': None,
+			'e3': None, 'f3': None, 'g3': None, 'h3': Piece('red', 'cannon'),
+			'i3': None,
+
+			# Row 4
+			'a4': Piece('red', 'soldier'), 'b4': None, 'c4': Piece('red', 'soldier'),
+			
+
+
+
+
 			# TODO: FINISH PIECE INITIALIZATION
 		}
 		self._turn = 'blue'
+
+	def print_board(self):
+		"""Print a representation of the current state of the Janggi
+		board. No parameters, no return value."""
+		for row in range(1, 11):
+			for column in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']:
+				square = column + str(row)
+				print(self._pieces[square] + " ")
+			print("\n\n")
+
 
 	def get_game_state(self):
 		"""Get the current state of the game. No parameters, returns
 		one of: 'UNFINISHED', 'BLUE_WON', 'RED_WON'"""
 		return self._game_state
 
-	def legal_move(self, rank, a, b):
+	def legal_move(self, piece, a, b)
 		"""Return true if the given rank can move from square a to square b. It
 		is assumed that b is empty or contains a piece from the opponent of player
 		whose piece is in square a. This function is used by the JanggiGame class."""
 	
+		rank = piece.get_rank()
+		player = piece.get_player()
+
+
 		# Used for finding adjacent squares
 		columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
 
@@ -113,30 +154,53 @@ class JanggiGame:
 			return col + row
 
 		if rank == 'general':
-			#TODO implement legal general moves
-			return True
+			# Build a list of valid squares the general can move to
+			general_moves = {
+				'red': {
+					'd1': ['e1', 'd2', 'e2'], 'e1': ['d1', 'f1', 'e2'],
+					'f1': ['e1', 'e2', 'f2'], 'd2': ['d1', 'e2', 'd3'],
+					'e2': ['d1', 'e1', 'f1', 'd2', 'f2', 'd3', 'e3', 'f3'],
+					'f2': ['f1', 'e2', 'f3'], 'd3': ['d2', 'e2', 'e3']
+					'e3': ['e2', 'd3', 'f3'], 'f3': ['e2', 'f2', 'e3'],
+					},
 
-		if rank == 'guard':
+				'blue': {
+					'd8': ['e8', 'd9', 'e9'], 'e8': ['d8', 'f8', 'e9'],
+					'f8': ['e8', 'e9', 'f9'], 'd9': ['d8', 'e9', 'd10'],
+					'e9': ['d8', 'e8', 'f8', 'd9', 'f9', 'd10', 'e10', 'f10'],
+					'f9': ['f8', 'e9', 'f10'], 'd10': ['d9', 'e9', 'e10'},
+					'e10': ['e9', 'd10', 'f10'], 'f10': ['e9', 'f9', 'e10'],
+					},	
+				}
+	
+			valid_squares = general_moves[player][a]
+
+			if b in valid_squares:
+				return True
+			else:
+				return False
+
+		elif rank == 'guard':
 			#TODO implement legal guard moves		
 			return True
 
-		if rank == 'horse':
+		elif rank == 'horse':
 			#TODO implement legal horse moves
 			return True
 
-		if rank == 'elephant':
+		elif rank == 'elephant':
 			#TODO implement legal elephant moves
 			return True
 
-		if rank == 'chariot':
+		elif rank == 'chariot':
 			#TODO implement legal chariot moves
 			return True
 
-		if rank == 'cannon':
+		elif rank == 'cannon':
 			#TODO implement legal cannon moves
 			return True
 
-		if rank == 'soldier':
+		elif rank == 'soldier':
 			#TODO implement legal soldier moves
 			return True
 
@@ -144,6 +208,9 @@ class JanggiGame:
 		"""Takes a player ('blue' or 'red') as a parameter and returns
 		the name of the square which holds that player's general"""
 		for square, piece in self._pieces.items():
+
+
+
 			if piece.get_player() == player and piece.get_rank() == 'general':
 				return square
 
@@ -199,7 +266,7 @@ class JanggiGame:
 			return False
 
 		# Check if the move is legal
-		if legal_move(self._pieces[a].get_rank(), a, b):
+		if legal_move(self._pieces[a], a, b):
 
 			# MOVE THE PIECE
 
@@ -216,6 +283,7 @@ class JanggiGame:
 					self._game_state = 'BLUE_WON'
 
 			return True
+
 
 
 """
