@@ -16,12 +16,13 @@ class Piece:
 		self._player = player
 		self._rank = rank
 
-	def __repr__(self):
-		"""Overrides repr to provide a printable version of a piece
-		for testing. Takes no parameters and returns nothing"""
-		player = self._player[0].upper()
+	def to_string(self):
+		"""Takes no parameters and returns nothing. Creates a string
+		representing a piece for printing the board."""
+		player = self._player[0]
 		rank = self._rank[0:2].upper()
-		return repr(player + " " + rank)
+		return (" " + player + rank + " ")
+
 
 	def get_player(self):
 		"""Get a piece's player ('blue' or 'red'). No parameters, return
@@ -68,12 +69,38 @@ class JanggiGame:
 
 			# Row 4
 			'a4': Piece('red', 'soldier'), 'b4': None, 'c4': Piece('red', 'soldier'),
-			
+			'd4': None, 'e4': Piece('red', 'soldier'), 'f4': None, 
+			'g4': Piece('red', 'soldier'), 'h4': None, 'i4': Piece('red', 'soldier'),	
+			# Row 5
+			'a5': None, 'b5': None, 'c5': None, 'd5': None, 'e5': None, 'f5': None,
+			'g5': None, 'h5': None, 'i5': None,
 
+			# Row 6
+			'a6': None, 'b6': None, 'c6': None, 'd6': None, 'e6': None, 'f6': None,
+			'g6': None, 'h6': None, 'i6': None,
 
+			# Row 7
+			'a7': Piece('blue', 'soldier'), 'b7': None, 'c7': Piece('blue', 'soldier'),
+			'd7': None, 'e7': Piece('blue', 'soldier'), 'f7': None,
+			'g7': Piece('blue', 'soldier'), 'h7': None, 'i7': Piece('blue', 'soldier'),
 
+			# Row 8
+			'a8': None, 'b8': Piece('blue', 'cannon'), 'c8': None, 'd8': None,
+			'e8': None, 'f8': None, 'g8': None, 'h8': Piece('blue', 'cannon'),
+			'i8': None,
 
-			# TODO: FINISH PIECE INITIALIZATION
+			# Row 9
+			'a9': None, 'b9': None, 'c9': None, 'd9': None,
+			'e9': Piece('blue', 'general'), 'f9': None, 'g9': None, 'h9': None,
+			'i9': None,
+
+			# Row 10
+			'a10': Piece('blue', 'chariot'), 'b10': Piece('blue', 'elephant'),
+			'c10': Piece('blue', 'horse'), 'd10': Piece('blue', 'guard'),
+			'e10': None, 'f10': Piece('blue', 'guard'),
+			'g10': Piece('blue', 'elephant'), 'h10': Piece('blue', 'horse'),
+			'i10': Piece('blue', 'chariot'),
+
 		}
 		self._turn = 'blue'
 
@@ -81,18 +108,22 @@ class JanggiGame:
 		"""Print a representation of the current state of the Janggi
 		board. No parameters, no return value."""
 		for row in range(1, 11):
+			line = ""
 			for column in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']:
 				square = column + str(row)
-				print(self._pieces[square] + " ")
-			print("\n\n")
-
+				piece = self._pieces[square]
+				if piece:
+					line += piece.to_string()
+				else:
+					line += " --- " 
+			print(line)
 
 	def get_game_state(self):
 		"""Get the current state of the game. No parameters, returns
 		one of: 'UNFINISHED', 'BLUE_WON', 'RED_WON'"""
 		return self._game_state
 
-	def legal_move(self, piece, a, b)
+	def legal_move(self, piece, a, b):
 		"""Return true if the given rank can move from square a to square b. It
 		is assumed that b is empty or contains a piece from the opponent of player
 		whose piece is in square a. This function is used by the JanggiGame class."""
@@ -153,14 +184,14 @@ class JanggiGame:
 			
 			return col + row
 
-		if rank == 'general':
-			# Build a list of valid squares the general can move to
-			general_moves = {
+		if rank == 'general' or rank == 'guard':
+			# Mapping of valid squares the general/guards can move to
+			moves = {
 				'red': {
 					'd1': ['e1', 'd2', 'e2'], 'e1': ['d1', 'f1', 'e2'],
 					'f1': ['e1', 'e2', 'f2'], 'd2': ['d1', 'e2', 'd3'],
 					'e2': ['d1', 'e1', 'f1', 'd2', 'f2', 'd3', 'e3', 'f3'],
-					'f2': ['f1', 'e2', 'f3'], 'd3': ['d2', 'e2', 'e3']
+					'f2': ['f1', 'e2', 'f3'], 'd3': ['d2', 'e2', 'e3'],
 					'e3': ['e2', 'd3', 'f3'], 'f3': ['e2', 'f2', 'e3'],
 					},
 
@@ -168,21 +199,17 @@ class JanggiGame:
 					'd8': ['e8', 'd9', 'e9'], 'e8': ['d8', 'f8', 'e9'],
 					'f8': ['e8', 'e9', 'f9'], 'd9': ['d8', 'e9', 'd10'],
 					'e9': ['d8', 'e8', 'f8', 'd9', 'f9', 'd10', 'e10', 'f10'],
-					'f9': ['f8', 'e9', 'f10'], 'd10': ['d9', 'e9', 'e10'},
+					'f9': ['f8', 'e9', 'f10'], 'd10': ['d9', 'e9', 'e10'],
 					'e10': ['e9', 'd10', 'f10'], 'f10': ['e9', 'f9', 'e10'],
 					},	
 				}
 	
-			valid_squares = general_moves[player][a]
+			valid_squares = moves[player][a]
 
 			if b in valid_squares:
 				return True
 			else:
 				return False
-
-		elif rank == 'guard':
-			#TODO implement legal guard moves		
-			return True
 
 		elif rank == 'horse':
 			#TODO implement legal horse moves
