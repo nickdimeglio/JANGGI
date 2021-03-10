@@ -106,7 +106,6 @@ class JanggiGame:
 		# An ordered list of the board's columns for calculating moves
 		self._columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
 
-
 	def print_board(self):
 		"""Print a representation of the current state of the Janggi
 		board. No parameters, no return value."""
@@ -126,57 +125,6 @@ class JanggiGame:
 		one of: 'UNFINISHED', 'BLUE_WON', 'RED_WON'"""
 		return self._game_state
 
-	
-	# Functions for finding adjacent squares
-	def above(self, square):
-		"""Returns the square above the provided square"""
-		col = square[0]
-		row = square[1]
-		if row == '1':
-			return None
-		else:
-			row = str(int(row) - 1)
-		
-		return col + row
-
-	def below(self, square):
-		"""Returns the square below the provided square"""
-		col = square[0]
-		row = square[1]
-
-		if row == '10':
-			return None
-		else:
-			row = str(int(row) + 1)
-
-		return col + row
-
-	def right_of(self, square):
-		"""Returns the square to the right of the provided square"""
-		col = square[0]
-		row = square[1]
-
-		if col == 'i':
-			return None
-		else:
-			col_index = self._columns.index(col)
-			col = str(self._columns[col_index + 1])
-		
-		return col + row
-		
-	def left_of(self, square):
-		"""Returns the square to the left of the provided square"""
-		col = square[0]
-		row = square[1]
-
-		if col == 'a':
-			return None
-		else:
-			col_index = self._columns.index(col)
-			col = self._columns[col_index - 1]
-	
-		return col + row
-
 	def legal_move(self, piece, a, b):
 		"""Return true if the given rank can move from square a to square b. It
 		is assumed that b is empty or contains a piece from the opponent of player
@@ -184,6 +132,67 @@ class JanggiGame:
 	
 		rank = piece.get_rank()
 		player = piece.get_player()
+
+		# Functions for finding adjacent squares
+		def above(square):
+			"""Returns the square above the provided square"""
+			if not square:
+				return None		# Returns None if the provided square is out of bounds
+			col = square[0]
+			row = square[1]
+			if row == '1':
+				return None
+			else:
+				row = str(int(row) - 1)
+
+			return col + row
+
+		def below(square):
+			"""Returns the square below the provided square"""
+			if not square:
+				return None		# Returns None if the provided square is out of bounds
+
+			col = square[0]
+			row = square[1]
+
+			if row == '10':
+				return None
+			else:
+				row = str(int(row) + 1)
+
+			return col + row
+
+		def right_of(square):
+			"""Returns the square to the right of the provided square"""
+			if not square:
+				return None		# Returns None if the provided square is out of bounds
+
+			col = square[0]
+			row = square[1]
+
+			if col == 'i':
+				return None
+			else:
+				col_index = self._columns.index(col)
+				col = str(self._columns[col_index + 1])
+
+			return col + row
+
+		def left_of(square):
+			"""Returns the square to the left of the provided square"""
+			if not square:
+				return None		# Returns None if the provided square is out of bounds
+
+			col = square[0]
+			row = square[1]
+
+			if col == 'a':
+				return None
+			else:
+				col_index = self._columns.index(col)
+				col = self._columns[col_index - 1]
+
+			return col + row
 
 		if rank == 'general' or rank == 'guard':
 			# Mapping of valid squares the general/guards can move to
@@ -207,36 +216,36 @@ class JanggiGame:
 	
 			valid_squares = moves[player][a]
 
-			return (b in valid_squares)
+			return b in valid_squares
 
 		elif rank == 'horse':
-			#TODO implement legal horse moves
-			# The fourse has eight possible squares to move to
+			# TODO implement legal horse moves
+			# The horse has eight possible squares to move to
 			# The path to each square must be checked for blocking pieces
 			moves = []
 
-			up = self.above(a)		
-			down = self.below(a)
-			left  = self.left_of(a)
-			right = self.right_of(a)
+			up = above(a)
+			down = below(a)
+			left = left_of(a)
+			right = right_of(a)
 
-			if not up:
-				moves.append(self.above(self.left_of(up)))		# Up and left
-				moves.append(self.above(self.right_of(up)))		# Up and right 
+			if up and not self._pieces[up]:				# Up is in bounds and unblocked
+				moves.append(above(left_of(up)))
+				moves.append(above(right_of(up)))
 
-			if not down:
-				moves.append(self.below(self.left_of(down)))		# Down and left
-				moves.append(self.below(self.right_of(down)))		# Down and right
+			if down and not self._pieces[down]:			# Down is in bounds and unblocked
+				moves.append(below(left_of(down)))
+				moves.append(below(right_of(down)))
 
-			if not left:
-				moves.append(self.left_of(self.below(left)))		# Left and down
-				moves.append(self.left_of(self.above(left)))		# Left and up
+			if left and not self._pieces[left]:			# Left is in bounds and unblocked
+				moves.append(left_of(below(left)))
+				moves.append(left_of(above(left)))
 
-			if not right:
-				moves.append(self.right_of(self.below(right)))	# Right and down
-				moves.append(self.right_of(self.above(right)))	# Right and up
+			if right and not self._pieces[right]:		# Right is in bounds and unblocked
+				moves.append(right_of(below(right)))
+				moves.append(right_of(above(right)))
 
-			return (b in moves)
+			return b in moves
 
 		elif rank == 'elephant':
 			#TODO implement legal elephant moves
