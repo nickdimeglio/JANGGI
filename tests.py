@@ -56,6 +56,24 @@ class TestLegalMove(unittest.TestCase):
 		self.assertFalse(game.legal_move(gen, 'f9', 'e8'))
 		self.assertFalse(game.legal_move(gen, 'd10', 'f10'))
 		
+	def test_horse(self):
+		game = JanggiGame()
+
+		# Move red soldier to B5
+		game._pieces['a4'] = None
+		game._pieces['b5'] = Piece('red', 'soldier')
+
+		# Place a blue horse on A7
+		game._pieces['a7'] = Piece('blue', 'horse')
+
+		# Blue horse should be able to take red soldier
+		self.assertTrue(game.legal_move(Piece('blue', 'horse'), 'a7', 'b5'))
+
+		# Block blue horse with another red soldier
+		game._pieces['a6'] = Piece('red', 'soldier')
+	
+		# Blue horse should now be blocked
+		self.assertFalse(game.legal_move(Piece('blue', 'horse'), 'a7', 'b5'))
 
 
 if __name__ == '__main__':
