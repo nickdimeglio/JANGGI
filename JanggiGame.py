@@ -9,6 +9,7 @@ class Piece:
 	not need to communicate with any other classes, but the legal move
 	function and the JanggiGame class will need to access rank and player,
 	so we provide getters for those private data members."""
+
 	def __init__(self, player, rank):
 		"""Create a piece by providing a player ('blue' or 'red') and a rank,
 		which can be any of the ranks of Janggi pieces such as 'general'
@@ -138,8 +139,10 @@ class JanggiGame:
 			"""Returns the square above the provided square"""
 			if not square:
 				return None		# Returns None if the provided square is out of bounds
+								# Sometimes Above/Below etc. get called out of bounds,
+								# like when moving horses
 			col = square[0]
-			row = square[1]
+			row = square[1:]
 			if row == '1':
 				return None
 			else:
@@ -153,7 +156,7 @@ class JanggiGame:
 				return None		# Returns None if the provided square is out of bounds
 
 			col = square[0]
-			row = square[1]
+			row = square[1:]
 
 			if row == '10':
 				return None
@@ -168,7 +171,7 @@ class JanggiGame:
 				return None		# Returns None if the provided square is out of bounds
 
 			col = square[0]
-			row = square[1]
+			row = square[1:]
 
 			if col == 'i':
 				return None
@@ -184,7 +187,7 @@ class JanggiGame:
 				return None		# Returns None if the provided square is out of bounds
 
 			col = square[0]
-			row = square[1]
+			row = square[1:]
 
 			if col == 'a':
 				return None
@@ -196,7 +199,7 @@ class JanggiGame:
 
 		if rank == 'general' or rank == 'guard':
 			# Mapping of valid squares the general/guards can move to
-			moves = {
+			valid_squares = {
 				'red': {
 					'd1': ['e1', 'd2', 'e2'], 'e1': ['d1', 'f1', 'e2'],
 					'f1': ['e1', 'e2', 'f2'], 'd2': ['d1', 'e2', 'd3'],
@@ -214,9 +217,9 @@ class JanggiGame:
 					},	
 				}
 	
-			valid_squares = moves[player][a]
+			moves = valid_squares[player][a]
 
-			return b in valid_squares
+			return b in moves
 
 		elif rank == 'horse':
 			# TODO implement legal horse moves
@@ -248,8 +251,39 @@ class JanggiGame:
 			return b in moves
 
 		elif rank == 'elephant':
-			#TODO implement legal elephant moves
-			return True
+
+			moves = []
+			
+			up = above(a)
+			down = below(a)
+			left = left_of(a)
+			right = right_of(a)
+
+			if up and not self._pieces[up]:				
+
+				# Up is in bounds and unblocked
+				moves.append(above(left_of(above(left_of(up)))))
+				moves.append(above(right_of(above(right_of(up)))))
+
+			if down and not self._pieces[down]:			
+
+				# Down is in bounds and unblocked
+				moves.append(below(left_of(below(left_of(down)))))
+				moves.append(below(right_of(below(right_of(down)))))
+
+			if left and not self._pieces[left]:			
+
+				# Left is in bounds and unblocked
+				moves.append(left_of(below(left_of(below(left)))))
+				moves.append(left_of(above(left_of(above(left)))))
+
+			if right and not self._pieces[right]:		
+				
+				# Right is in bounds and unblocked
+				moves.append(right_of(below(right_of(below(right)))))
+				moves.append(right_of(above(right_of(above(right)))))
+
+			return b in moves
 
 		elif rank == 'chariot':
 			#TODO implement legal chariot moves
