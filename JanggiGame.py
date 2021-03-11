@@ -498,13 +498,14 @@ class JanggiGame:
 			return False
 
 		piece = self._pieces[a]
+		target = self._pieces[b]
 
 		# Check if the right player i playing
 		if piece.get_player() != self._turn:
 			return False
 
 		# Check if the player has a piece in the intended square
-		if piece.get_player() == self._pieces[b].get_player():
+		if target and self._turn == target.get_player():
 			return False
 
 		# Check if the move is legal
@@ -517,7 +518,7 @@ class JanggiGame:
 			if self._turn == 'blue':
 				self._turn = 'red'
 
-			if self._turn == 'red':
+			elif self._turn == 'red':
 				self._turn = 'blue'
 
 			# TODO implement checkmate

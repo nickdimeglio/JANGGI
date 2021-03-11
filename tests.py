@@ -181,6 +181,17 @@ class TestLegalMove(unittest.TestCase):
 		self.assertFalse(game.legal_move(Piece('blue', 'soldier'), 'b9', 'b8'))
 
 
+class TestMakeMove(unittest.TestCase):
+
+	def test_move_general(self):
+		game = JanggiGame()
+
+		self.assertTrue(game.make_move('e9', 'e8'))
+		self.assertFalse(game.make_move('d10', 'd9'))
+		self.assertTrue(game.make_move('e2', 'e3'))
+
+
+
 if __name__ == '__main__':
 	unittest.main()
 
