@@ -347,7 +347,6 @@ class JanggiGame:
 			return b in moves
 
 		elif rank == 'cannon':
-			#TODO implement legal cannon moves
 			moves = []
 
 			"""Edge cases where the cannon can jump diagonally 
@@ -397,16 +396,55 @@ class JanggiGame:
 			return b in moves
 
 		elif rank == 'soldier':
-			#TODO implement legal soldier moves
-			return True
+			moves = []
+
+			"""Special case for when the soldier is in a palace"""
+			# Red Palace
+			red_center = self._pieces['e2']
+			red_corners = ['d1', 'f1', 'd3', 'f3']
+
+			if a in red_corners:
+				if not red_center or (red_center and red_center.get_player() != player):
+					moves.append('e2')
+
+			elif a == 'e2':
+				for corner in red_corners:
+					piece = self._pieces[corner]
+					if not piece or (piece and piece.get_player() != player):
+						moves.append(corner)
+
+			# Blue Palace
+			blue_center = self._pieces['e9']
+			blue_corners = ['d8', 'f8', 'd10', 'f10']
+
+			if a in blue_corners:
+				if not blue_center or (blue_center and blue_center.get_player() != player):
+					moves.append('e9')
+
+			elif a == 'e9':
+				for corner in blue_corners:
+					piece = self._pieces[corner]
+					if not piece or (piece and piece.get_player() != player):
+						moves.append(corner)
+
+			"""All other standard cases"""
+			if player == 'blue': directions = [above, left_of, right_of]
+			if player == 'red': directions = [below, left_of, right_of]
+
+			for direction in directions:
+				next_sq = direction(a)
+				next_pc = self._pieces[next_sq]
+
+				if not next_pc or (next_pc and next_pc.get_player() != player):
+					# Blank square or enemy piece is adjacent
+					moves.append(next_sq)
+
+			return b in moves
 
 	def find_general(self, player):
 		"""Takes a player ('blue' or 'red') as a parameter and returns
 		the name of the square which holds that player's general"""
 		for square, piece in self._pieces.items():
-
-
-
 			if piece.get_player() == player and piece.get_rank() == 'general':
 				return square
 

@@ -156,6 +156,30 @@ class TestLegalMove(unittest.TestCase):
 		game._pieces['d10'] = None
 		self.assertTrue(game.legal_move(Piece('red', 'cannon'), 'd10', 'f8'))
 
+	def test_soldier(self):
+		game = JanggiGame()
+
+		# Blue soldier can move up, left, right, but not down
+		self.assertTrue(game.legal_move(Piece('blue', 'soldier'), 'c7', 'c6'))
+		self.assertTrue(game.legal_move(Piece('blue', 'soldier'), 'c7', 'b7'))
+		self.assertTrue(game.legal_move(Piece('blue', 'soldier'), 'c7', 'd7'))
+		self.assertFalse(game.legal_move(Piece('blue', 'soldier'), 'c7', 'c8'))
+
+		# Red soldier can move down, left, right, but not up
+		self.assertTrue(game.legal_move(Piece('red', 'soldier'), 'c4', 'c5'))
+		self.assertTrue(game.legal_move(Piece('red', 'soldier'), 'c4', 'b4'))
+		self.assertTrue(game.legal_move(Piece('red', 'soldier'), 'c4', 'd4'))
+		self.assertFalse(game.legal_move(Piece('red', 'soldier'), 'c4', 'c3'))
+
+		# Red can take blue's general diagonally in blue's palace
+		self.assertTrue(game.legal_move(Piece('red', 'soldier'), 'd8', 'e9'))
+
+		# Blue can take blue's general diagonally in red's palace
+		self.assertTrue(game.legal_move(Piece('blue', 'soldier'), 'd3', 'e2'))
+
+		# Blue can't take it's own peice
+		self.assertFalse(game.legal_move(Piece('blue', 'soldier'), 'b9', 'b8'))
+
 
 if __name__ == '__main__':
 	unittest.main()
