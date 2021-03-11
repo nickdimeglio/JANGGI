@@ -128,6 +128,33 @@ class TestLegalMove(unittest.TestCase):
 		# Chariot cannot skip over the elephant
 		self.assertFalse(game.legal_move(Piece('red', 'chariot'), 'd10', 'h10'))
 
+	def test_cannon(self):
+		game = JanggiGame()
+
+		# Jump an enemy piece
+		self.assertTrue(game.legal_move(Piece('blue', 'cannon'), 'a5', 'a3'))
+
+		# Jump a friendly piece
+		self.assertTrue(game.legal_move(Piece('blue', 'cannon'), 'a8', 'a6'))
+
+		# Jump two enemy pieces
+		game._pieces['a4'] = None
+		game._pieces['b4'] = Piece('red', 'soldier')
+		self.assertTrue(game.legal_move(Piece('blue', 'cannon'), 'a4', 'd4'))
+
+		# Can't jump a cannon
+		self.assertFalse(game.legal_move(Piece('blue', 'cannon'), 'c8', 'a8'))
+
+		# Can't land on an enemy piece
+		self.assertFalse(game.legal_move(Piece('blue', 'cannon'), 'a4', 'c4'))
+
+		# Jump a piece in the center of the red palace
+		game._pieces['d1'] = None
+		self.assertTrue(game.legal_move(Piece('red', 'cannon'), 'd1', 'f3'))
+
+		# Jump a piece in the center of the blue palace
+		game._pieces['d10'] = None
+		self.assertTrue(game.legal_move(Piece('red', 'cannon'), 'd10', 'f8'))
 
 
 if __name__ == '__main__':

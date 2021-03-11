@@ -35,6 +35,7 @@ class Piece:
 		parameters, return type is a string like 'general' or 'elephant'."""
 		return self._rank
 
+
 class JanggiGame:
 	"""This class creates a board represented by a dictionary whose keys
 	are squares and whose values are pieces. An empty square has the value
@@ -70,8 +71,8 @@ class JanggiGame:
 
 			# Row 4
 			'a4': Piece('red', 'soldier'), 'b4': None, 'c4': Piece('red', 'soldier'),
-			'd4': None, 'e4': Piece('red', 'soldier'), 'f4': None, 
-			'g4': Piece('red', 'soldier'), 'h4': None, 'i4': Piece('red', 'soldier'),	
+			'd4': None, 'e4': Piece('red', 'soldier'), 'f4': None,
+			'g4': Piece('red', 'soldier'), 'h4': None, 'i4': Piece('red', 'soldier'),
 
 			# Row 5
 			'a5': None, 'b5': None, 'c5': None, 'd5': None, 'e5': None, 'f5': None,
@@ -119,7 +120,7 @@ class JanggiGame:
 				if piece:
 					line += piece.to_string()
 				else:
-					line += " --- " 
+					line += " --- "
 			print(line)
 
 	def get_game_state(self):
@@ -216,9 +217,9 @@ class JanggiGame:
 					'e9': ['d8', 'e8', 'f8', 'd9', 'f9', 'd10', 'e10', 'f10'],
 					'f9': ['f8', 'e9', 'f10'], 'd10': ['d9', 'e9', 'e10'],
 					'e10': ['e9', 'd10', 'f10'], 'f10': ['e9', 'f9', 'e10'],
-					},	
+					},
 				}
-	
+
 			moves = valid_squares[player][a]
 
 			return b in moves
@@ -254,32 +255,32 @@ class JanggiGame:
 		elif rank == 'elephant':
 
 			moves = []
-			
+
 			up = above(a)
 			down = below(a)
 			left = left_of(a)
 			right = right_of(a)
 
-			if up and not self._pieces[up]:				
+			if up and not self._pieces[up]:
 
 				# Up is in bounds and unblocked
 				moves.append(above(left_of(above(left_of(up)))))
 				moves.append(above(right_of(above(right_of(up)))))
 
-			if down and not self._pieces[down]:			
+			if down and not self._pieces[down]:
 
 				# Down is in bounds and unblocked
 				moves.append(below(left_of(below(left_of(down)))))
 				moves.append(below(right_of(below(right_of(down)))))
 
-			if left and not self._pieces[left]:			
+			if left and not self._pieces[left]:
 
 				# Left is in bounds and unblocked
 				moves.append(left_of(below(left_of(below(left)))))
 				moves.append(left_of(above(left_of(above(left)))))
 
-			if right and not self._pieces[right]:		
-				
+			if right and not self._pieces[right]:
+
 				# Right is in bounds and unblocked
 				moves.append(right_of(below(right_of(below(right)))))
 				moves.append(right_of(above(right_of(above(right)))))
@@ -287,8 +288,6 @@ class JanggiGame:
 			return b in moves
 
 		elif rank == 'chariot':
-			#TODO implement legal chariot moves
-
 			moves = []
 			red_center = self._pieces['e2']
 			blue_center = self._pieces['e9']
@@ -333,10 +332,10 @@ class JanggiGame:
 
 				while next_sq:
 					next_sq_pc = self._pieces[next_sq]
-			
+
 					if next_sq_pc:
 						if next_sq_pc.get_player() == player:  	# Chariot reached am teammate
-							break	
+							break
 						else:									# Chariot reached an enemy
 							moves.append(next_sq)
 							break
@@ -349,7 +348,53 @@ class JanggiGame:
 
 		elif rank == 'cannon':
 			#TODO implement legal cannon moves
-			return True
+			moves = []
+
+			"""Edge cases where the cannon can jump diagonally 
+				over the center of a palace"""
+			# Red Palace Diagonal Jumps
+			if a in ['d1', 'f1', 'd3', 'f3'] and self._pieces['e2']:
+				red_jumps = {'d1': 'f3', 'f1': 'd3', 'd3': 'f1', 'f3': 'd1'}
+
+				for s, f in red_jumps.items():
+					if a == s:
+						if not self._pieces[f] or self._pieces[f].get_player() != player:
+							moves.append(f)
+
+			# Blue Palace Diagonal Jumps
+			if a in ['d8', 'f8', 'd10', 'f10'] and self._pieces['e9']:
+				blue_jumps = {'d8': 'f10', 'f8': 'd10', 'd10': 'f8', 'f10': 'd8'}
+
+				for s, f in blue_jumps.items():
+					if a == s:
+						if not self._pieces[f] or self._pieces[f].get_player() != player:
+							moves.append(f)
+
+			"""All other standard cannon cases"""
+
+			directions = [above, below, left_of, right_of]
+
+			for direction in directions:
+				if direction(a):
+					next_sq = direction(a)
+
+					while next_sq:
+						next_pc = self._pieces[next_sq]
+
+						# Cannons can't jump over cannons
+						if next_pc and next_pc.get_rank() == 'cannon':
+							break
+
+						# Jump to a blank square
+						elif not next_pc:
+							moves.append(next_sq)
+							break
+
+						# Jump over a piece and onward
+						else:
+							next_sq = direction(next_sq)
+
+			return b in moves
 
 		elif rank == 'soldier':
 			#TODO implement legal soldier moves
@@ -436,7 +481,6 @@ class JanggiGame:
 					self._game_state = 'BLUE_WON'
 
 			return True
-
 
 
 """
