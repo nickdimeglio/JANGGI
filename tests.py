@@ -75,6 +75,60 @@ class TestLegalMove(unittest.TestCase):
 		# Blue horse should now be blocked
 		self.assertFalse(game.legal_move(Piece('blue', 'horse'), 'a7', 'b5'))
 
+		# Blue horse should not be able to move in a straight line
+		self.assertFalse(game.legal_move(Piece('blue', 'horse'), 'h10', 'h9'))
+
+	def test_elephant(self):
+		game = JanggiGame()
+		
+		# Move red soldier to D7
+		game._pieces['c4'] = None
+		game._pieces['d7'] = Piece('red', 'soldier')	
+
+		# Blue elephant should be able to take red soldier
+		self.assertTrue(game.legal_move(Piece('blue', 'elephant'), 'b10', 'd7'))
+
+		# Block blue elephant with a blue cannon
+		game._pieces['b8'] = None
+		game._pieces['b9'] = Piece('blue', 'cannon')
+
+		# Blue elephant should now be blocked
+		self.assertFalse(game.legal_move(Piece('blue', 'elephant'), 'b10', 'd7'))
+
+	def test_chariot(self):
+		game = JanggiGame()
+
+		# Remove Blue Guards
+		game._pieces['d10'] = None
+		game._pieces['f10'] = None
+
+		# Place Red chariot in Blue Palace
+		game._pieces['d10'] = Piece('red', 'chariot')
+
+		# Chariot can move diagonally to take the General
+		self.assertTrue(game.legal_move(Piece('red', 'chariot'), 'd10', 'e9'))
+
+		# Chariot can move to the other corner of the palace
+		game._pieces['e9'] = None		# Remove general
+		self.assertTrue(game.legal_move(Piece('red', 'chariot'), 'd10', 'f8'))
+
+		# Chariot can move out of the palace and take the Elephant
+		self.assertTrue(game.legal_move(Piece('red', 'chariot'), 'd10', 'g10'))
+
+		# Chariot can escape back to it's side across the board
+		self.assertTrue(game.legal_move(Piece('red', 'chariot'), 'd10', 'd2'))
+
+		# Chariot cannot move on top of it's own elephant
+		self.assertFalse(game.legal_move(Piece('red', 'chariot'), 'd10', 'd1'))
+
+		# Chariot cannot skip over the General
+		game._pieces['e9'] = Piece('blue', 'general')	# Add general back
+		self.assertFalse(game.legal_move(Piece('red', 'chariot'), 'd10', 'f8'))
+
+		# Chariot cannot skip over the elephant
+		self.assertFalse(game.legal_move(Piece('red', 'chariot'), 'd10', 'h10'))
+
+
 
 if __name__ == '__main__':
 	unittest.main()

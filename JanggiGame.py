@@ -72,6 +72,7 @@ class JanggiGame:
 			'a4': Piece('red', 'soldier'), 'b4': None, 'c4': Piece('red', 'soldier'),
 			'd4': None, 'e4': Piece('red', 'soldier'), 'f4': None, 
 			'g4': Piece('red', 'soldier'), 'h4': None, 'i4': Piece('red', 'soldier'),	
+
 			# Row 5
 			'a5': None, 'b5': None, 'c5': None, 'd5': None, 'e5': None, 'f5': None,
 			'g5': None, 'h5': None, 'i5': None,
@@ -130,9 +131,10 @@ class JanggiGame:
 		"""Return true if the given rank can move from square a to square b. It
 		is assumed that b is empty or contains a piece from the opponent of player
 		whose piece is in square a. This function is used by the JanggiGame class."""
-	
+
 		rank = piece.get_rank()
 		player = piece.get_player()
+		turn = self._turn
 
 		# Functions for finding adjacent squares
 		def above(square):
@@ -222,7 +224,6 @@ class JanggiGame:
 			return b in moves
 
 		elif rank == 'horse':
-			# TODO implement legal horse moves
 			# The horse has eight possible squares to move to
 			# The path to each square must be checked for blocking pieces
 			moves = []
@@ -287,7 +288,64 @@ class JanggiGame:
 
 		elif rank == 'chariot':
 			#TODO implement legal chariot moves
-			return True
+
+			moves = []
+			red_center = self._pieces['e2']
+			blue_center = self._pieces['e9']
+
+			"""In some cases, the chariot can move diagonally through a palace"""
+			if a in ['d1', 'd3', 'f1', 'f3']:
+				if red_center and red_center.get_player() != player:
+					moves.append('e2')
+
+				elif not red_center:
+					moves.append('e2')
+
+					# The set of possible two-square diagonal movements in red's palace
+					squares = {'d1': 'f3', 'f1': 'd3', 'd3': 'f1', 'f3': 'd1'}
+
+					for s, f in squares.items():
+						if a == s:
+							if not self._pieces[f] or self._pieces[f].get_player() != player:
+								moves.append(f)
+
+			if a in ['d8', 'd10', 'f8', 'f10']:
+				if blue_center and blue_center.get_player() != player:
+					moves.append('e9')
+
+				elif not blue_center:
+					moves.append('e9')
+
+					# The set of possible two-square diagonal movements in blue's palace
+					squares = {'f10': 'd8', 'd10': 'f8', 'd8': 'f10', 'f8': 'd10'}
+
+					for s, f in squares.items():
+						if a == s:
+							if not self._pieces[f] or self._pieces[f].get_player() != player:
+								moves.append(f)
+
+			"""In all cases, the chariot can travel orthogonally 
+				until reaching a teammate, an enemy, or a border"""
+			chariot_paths = [above, below, left_of, right_of]
+
+			for direction in chariot_paths:
+				next_sq = direction(a)
+
+				while next_sq:
+					next_sq_pc = self._pieces[next_sq]
+			
+					if next_sq_pc:
+						if next_sq_pc.get_player() == player:  	# Chariot reached am teammate
+							break	
+						else:									# Chariot reached an enemy
+							moves.append(next_sq)
+							break
+
+					else:
+						moves.append(next_sq)
+						next_sq = direction(next_sq)
+
+			return b in moves
 
 		elif rank == 'cannon':
 			#TODO implement legal cannon moves
