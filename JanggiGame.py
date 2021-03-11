@@ -131,11 +131,21 @@ class JanggiGame:
 	def legal_move(self, piece, a, b):
 		"""Return true if the given rank can move from square a to square b. It
 		is assumed that b is empty or contains a piece from the opponent of player
-		whose piece is in square a. This function is used by the JanggiGame class."""
+		whose piece is in square a. This function is used by the JanggiGame class.
+
+		I chose to keep this function generic with branches for each piece. I
+		strongly considered creating classes for each rank and providing each
+		class with it's own legal_move function, but I believe my implementation
+		is more concise and readable.
+
+		Another design choice of mine was to implement legal moves for each rank
+		as a list of ALL POSSIBLE legal moves, followed by a check for whether
+		the particular move is in that list. I could have just checked the
+		particular move based on the rule set, but this implementation seemed
+		easier without any noticeable drawbacks."""
 
 		rank = piece.get_rank()
 		player = piece.get_player()
-		turn = self._turn
 
 		# Functions for finding adjacent squares
 		def above(square):
@@ -289,39 +299,35 @@ class JanggiGame:
 
 		elif rank == 'chariot':
 			moves = []
-			red_center = self._pieces['e2']
-			blue_center = self._pieces['e9']
 
 			"""In some cases, the chariot can move diagonally through a palace"""
-			if a in ['d1', 'd3', 'f1', 'f3']:
-				if red_center and red_center.get_player() != player:
-					moves.append('e2')
+			red_center = 'e2'
+			red_corners = ['d1', 'd3', 'f1', 'f3']
 
-				elif not red_center:
-					moves.append('e2')
+			if a == red_center:
+				moves += red_corners
 
-					# The set of possible two-square diagonal movements in red's palace
-					squares = {'d1': 'f3', 'f1': 'd3', 'd3': 'f1', 'f3': 'd1'}
+			elif a in red_corners:
+				moves.append(red_center)
+				if not self._pieces[red_center]:
+					if a == 'd1': moves.append('f3')
+					elif a == 'f1': moves.append('d3')
+					elif a == 'f3': moves.append('d1')
+					elif a == 'd3': moves.append('f1')
 
-					for s, f in squares.items():
-						if a == s:
-							if not self._pieces[f] or self._pieces[f].get_player() != player:
-								moves.append(f)
+			blue_center = 'e9'
+			blue_corners = ['d8', 'f8', 'd10', 'f10']
 
-			if a in ['d8', 'd10', 'f8', 'f10']:
-				if blue_center and blue_center.get_player() != player:
-					moves.append('e9')
+			if a == blue_center:
+				moves += blue_corners
 
-				elif not blue_center:
-					moves.append('e9')
-
-					# The set of possible two-square diagonal movements in blue's palace
-					squares = {'f10': 'd8', 'd10': 'f8', 'd8': 'f10', 'f8': 'd10'}
-
-					for s, f in squares.items():
-						if a == s:
-							if not self._pieces[f] or self._pieces[f].get_player() != player:
-								moves.append(f)
+			elif a in blue_corners:
+				moves.append(blue_center)
+				if not self._pieces[blue_center]:
+					if a == 'd8': moves.append('f10')
+					elif a == 'f8': moves.append('d10')
+					elif a == 'd10': moves.append('f8')
+					elif a == 'f10': moves.append('d8')
 
 			"""In all cases, the chariot can travel orthogonally 
 				until reaching a teammate, an enemy, or a border"""
@@ -334,7 +340,7 @@ class JanggiGame:
 					next_sq_pc = self._pieces[next_sq]
 
 					if next_sq_pc:
-						if next_sq_pc.get_player() == player:  	# Chariot reached am teammate
+						if next_sq_pc.get_player() == player:  	# Chariot reached a teammate
 							break
 						else:									# Chariot reached an enemy
 							moves.append(next_sq)
@@ -486,7 +492,7 @@ class JanggiGame:
 	def make_move(self, a, b):
 		"""Takes two strings that represent squares such as 'a2' and 'g7'
 		and moves the piece from the first square into the second square,
-		if possible. Returns true if the move is succesful, false otherwise."""
+		if possible. Returns true if the move is successful, false otherwise."""
 		# Check if the game is finished
 		if self._game_state != 'UNFINISHED':
 			return False
@@ -502,9 +508,11 @@ class JanggiGame:
 			return False
 
 		# Check if the move is legal
-		if legal_move(piece, a, b):
+		if self.legal_move(piece, a, b):
 
 			# MOVE THE PIECE
+			self._pieces[a] = None
+			self._pieces[b] = piece
 
 			if self._turn == 'blue':
 				self._turn = 'red'
