@@ -520,11 +520,14 @@ class JanggiGame:
 			if self._turn == 'red':
 				self._turn = 'blue'
 
+			# TODO implement checkmate
+			"""
 			if self.is_in_checkmate(self._turn):
 				if self._turn == 'blue':
 					self._game_state = 'RED_WON'
 				if self._turn == 'red':
 					self._game_state = 'BLUE_WON'
+			"""
 
 			return True
 
