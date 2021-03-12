@@ -2,8 +2,9 @@
 from JanggiGame import *
 import unittest
 
+
 class TestLegalMove(unittest.TestCase):
-	"""Tests the Legal Move function"""
+	# Tests the Legal Move function
 
 	def test_general(self):
 		game = JanggiGame()
@@ -29,8 +30,7 @@ class TestLegalMove(unittest.TestCase):
 		self.assertFalse(game.legal_move(gen, 'e8', 'e10'))
 		self.assertFalse(game.legal_move(gen, 'f9', 'e8'))
 		self.assertFalse(game.legal_move(gen, 'd10', 'f10'))
-		
-			
+
 	def test_guard(self):
 		game = JanggiGame()
 
@@ -55,7 +55,7 @@ class TestLegalMove(unittest.TestCase):
 		self.assertFalse(game.legal_move(gen, 'e8', 'e10'))
 		self.assertFalse(game.legal_move(gen, 'f9', 'e8'))
 		self.assertFalse(game.legal_move(gen, 'd10', 'f10'))
-		
+
 	def test_horse(self):
 		game = JanggiGame()
 
@@ -71,7 +71,7 @@ class TestLegalMove(unittest.TestCase):
 
 		# Block blue horse with another red soldier
 		game._pieces['a6'] = Piece('red', 'soldier')
-	
+
 		# Blue horse should now be blocked
 		self.assertFalse(game.legal_move(Piece('blue', 'horse'), 'a7', 'b5'))
 
@@ -80,10 +80,10 @@ class TestLegalMove(unittest.TestCase):
 
 	def test_elephant(self):
 		game = JanggiGame()
-		
+
 		# Move red soldier to D7
 		game._pieces['c4'] = None
-		game._pieces['d7'] = Piece('red', 'soldier')	
+		game._pieces['d7'] = Piece('red', 'soldier')
 
 		# Blue elephant should be able to take red soldier
 		self.assertTrue(game.legal_move(Piece('blue', 'elephant'), 'b10', 'd7'))
@@ -145,16 +145,17 @@ class TestLegalMove(unittest.TestCase):
 		# Can't jump a cannon
 		self.assertFalse(game.legal_move(Piece('blue', 'cannon'), 'c8', 'a8'))
 
-		# Can't land on an enemy piece
-		self.assertFalse(game.legal_move(Piece('blue', 'cannon'), 'a4', 'c4'))
+		# Take an enemy piece
+		self.assertTrue(game.legal_move(Piece('blue', 'cannon'), 'a4', 'c4'))
 
 		# Jump a piece in the center of the red palace
-		game._pieces['d1'] = None
 		self.assertTrue(game.legal_move(Piece('red', 'cannon'), 'd1', 'f3'))
 
 		# Jump a piece in the center of the blue palace
 		game._pieces['d10'] = None
 		self.assertTrue(game.legal_move(Piece('red', 'cannon'), 'd10', 'f8'))
+
+
 
 	def test_soldier(self):
 		game = JanggiGame()
@@ -181,17 +182,86 @@ class TestLegalMove(unittest.TestCase):
 		self.assertFalse(game.legal_move(Piece('blue', 'soldier'), 'b9', 'b8'))
 
 
+
+
 class TestMakeMove(unittest.TestCase):
 
 	def test_move_general(self):
 		game = JanggiGame()
 
+		# Blue General can move up
+		self.assertIsNone(game._pieces['e8'])
+		self.assertEqual(game._pieces['e9'].get_rank(), 'general')
+		self.assertEqual(game._pieces['e9'].get_player(), 'blue')
 		self.assertTrue(game.make_move('e9', 'e8'))
-		self.assertFalse(game.make_move('d10', 'd9'))
-		self.assertTrue(game.make_move('e2', 'e3'))
+		self.assertEqual('blue', game._pieces['e8'].get_player())
+		self.assertEqual('general', game._pieces['e8'].get_rank())
+		self.assertIsNone(game._pieces['e9'])
 
+		# Not blue's turn
+		self.assertFalse(game.make_move('d10', 'd9'))
+
+		self.assertIsNone(game._pieces['d9'])
+		self.assertEqual(game._pieces['d10'].get_rank(), 'guard')
+		self.assertEqual(game._pieces['d10'].get_player(), 'blue')
+
+		self.assertTrue(game.make_move('e2', 'e3'))
+		game.print_board()
+
+	def test_move_cannon(self):
+		game = JanggiGame()
+
+		self.assertFalse(game.make_move('b8', 'd6'))
+
+		self.assertFalse(game.make_move('b8', 'b7'))
+
+		game._pieces['b6'] = Piece('blue', 'cannon')
+		game._pieces['c6'] = Piece('blue', 'soldier')
+		self.assertTrue(game.make_move('b6', 'e6'))
+
+		# Jump a space but not starting with a piece to jump
+		game = JanggiGame()
+		game._turn = 'red'
+		game._pieces['d3'] = Piece('red', 'horse')
+		self.assertTrue(game.make_move('b3', 'e3'))
+
+	def test_move_soldier(self):
+		game = JanggiGame()
+
+		self.assertFalse(game.make_move('a1', 'a3'))
+		self.assertTrue(game.make_move('a7', 'a6'))
+
+	def test_pass_turn(self):
+		game = JanggiGame()
+
+		self.assertTrue(game.make_move('a7', 'b7'))
+		self.assertTrue(game.make_move('a4', 'a4'))
+		game = JanggiGame()
+
+	def test_check_mate(self):
+		game = JanggiGame()
+		self.assertEqual(game.get_game_state(), 'UNFINISHED')
+
+		game._pieces['d3'] = Piece('red', 'chariot')
+		game._pieces['e6'] = Piece('red', 'cannon')
+		game._pieces['f4'] = Piece('red', 'chariot')
+
+		self.assertTrue(game.is_in_check('blue'))
+		game.print_board()
+
+		game._pieces['e6'] = None
+		game._pieces['e5'] = Piece('red', 'cannon')
+		game._pieces['e8'] = Piece('blue', 'soldier')
+		print('\n\n\n\n\n')
+		game.print_board()
+
+		game.is_in_check('blue')
+
+		self.assertTrue(game.is_in_checkmate('blue'))
+		self.assertEqual(game.get_game_state(), 'RED_WON')
 
 
 if __name__ == '__main__':
 	unittest.main()
+
 

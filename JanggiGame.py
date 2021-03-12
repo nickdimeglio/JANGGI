@@ -24,7 +24,6 @@ class Piece:
 		rank = self._rank[0:2].upper()
 		return (" " + player + rank + " ")
 
-
 	def get_player(self):
 		"""Get a piece's player ('blue' or 'red'). No parameters, return
 		type is a string 'blue' or 'red'."""
@@ -149,7 +148,7 @@ class JanggiGame:
 
 		# Functions for finding adjacent squares
 		def above(square):
-			"""Returns the square above the provided square"""
+			"""Takes a square and returns the square above the provided square"""
 			if not square:
 				return None		# Returns None if the provided square is out of bounds
 								# Sometimes Above/Below etc. get called out of bounds,
@@ -164,7 +163,7 @@ class JanggiGame:
 			return col + row
 
 		def below(square):
-			"""Returns the square below the provided square"""
+			"""Takes a square and returns the square below the provided square"""
 			if not square:
 				return None		# Returns None if the provided square is out of bounds
 
@@ -179,7 +178,7 @@ class JanggiGame:
 			return col + row
 
 		def right_of(square):
-			"""Returns the square to the right of the provided square"""
+			"""Takes a square and returns the square to the right of the provided square"""
 			if not square:
 				return None		# Returns None if the provided square is out of bounds
 
@@ -195,7 +194,7 @@ class JanggiGame:
 			return col + row
 
 		def left_of(square):
-			"""Returns the square to the left of the provided square"""
+			"""Takes a square and returns the square to the left of the provided square"""
 			if not square:
 				return None		# Returns None if the provided square is out of bounds
 
@@ -382,20 +381,17 @@ class JanggiGame:
 			for direction in directions:
 				if direction(a):
 					next_sq = direction(a)
+					piece_to_jump = False
 
 					while next_sq:
-						next_pc = self._pieces[next_sq]
-
-						# Cannons can't jump over cannons
-						if next_pc and next_pc.get_rank() == 'cannon':
-							break
-
-						# Jump to a blank square
-						elif not next_pc:
-							moves.append(next_sq)
-							break
-
-						# Jump over a piece and onward
+						if next_sq == b:
+							return piece_to_jump
+						elif self._pieces[next_sq]:
+							if self._pieces[next_sq].get_rank() == 'cannon':
+								break
+							else:
+								piece_to_jump = True
+								next_sq = direction(next_sq)
 						else:
 							next_sq = direction(next_sq)
 
@@ -439,11 +435,11 @@ class JanggiGame:
 
 			for direction in directions:
 				next_sq = direction(a)
-				next_pc = self._pieces[next_sq]
-
-				if not next_pc or (next_pc and next_pc.get_player() != player):
-					# Blank square or enemy piece is adjacent
-					moves.append(next_sq)
+				if next_sq:
+					next_pc = self._pieces[next_sq]
+					if not next_pc or (next_pc and next_pc.get_player() != player):
+						# Blank square or enemy piece is adjacent
+						moves.append(next_sq)
 
 			return b in moves
 
@@ -451,51 +447,132 @@ class JanggiGame:
 		"""Takes a player ('blue' or 'red') as a parameter and returns
 		the name of the square which holds that player's general"""
 		for square, piece in self._pieces.items():
-			if piece.get_player() == player and piece.get_rank() == 'general':
-				return square
+			if piece:
+				if piece.get_player() == player and piece.get_rank() == 'general':
+					return square
 
 	def is_in_check(self, player):
-		"""Takes a player ('blue' or 'red') as a parameter and returns
-		True if that player is in check, False otherwise."""
+		"""Takes a position and returns True if a player is vulnerable there,
+			False otherwise"""
+
 		if player == 'blue':
 			opponent = 'red'
 		else:
 			opponent = 'blue'
 
-		hideout = self.find_general(player)
-
 		in_check = False
 		# Check each of the other team's pieces to see if they capture
 		for square, piece in self._pieces.items():
-			if piece.get_player() == opponent:
-				if legal_move(piece.get_rank(), square, hideout):
-					in_check = True
+			if piece:
+				if piece.get_player() == opponent:
+					if self.legal_move(piece, square, self.find_general(player)):
+						in_check = True
 
 		return in_check
 
 	def is_in_checkmate(self, player):
 		"""Takes a player ('blue' or 'red') as a parameter and returns
 		True if that player is in checkmate, False otherwise."""
-		if player == 'blue':
-			opponent = 'red'
-		else:
-			opponent = 'blue'
 
-		hideout = self.find_general(opponent)
+		# Mapping of valid squares the general/guards can move to
+		valid_squares = {
+			'red': {
+				'd1': ['e1', 'd2', 'e2'], 'e1': ['d1', 'f1', 'e2'],
+				'f1': ['e1', 'e2', 'f2'], 'd2': ['d1', 'e2', 'd3'],
+				'e2': ['d1', 'e1', 'f1', 'd2', 'f2', 'd3', 'e3', 'f3'],
+				'f2': ['f1', 'e2', 'f3'], 'd3': ['d2', 'e2', 'e3'],
+				'e3': ['e2', 'd3', 'f3'], 'f3': ['e2', 'f2', 'e3'],
+			},
 
-		# CHECK IF THE GENERAL IS IN CHECK
-		# CHECK IF THE GENERAL WOULD BE IN CHECK IF IT MOVED TO
-		# EACH OF IT'S 8 POSSIBLE SPACES
+			'blue': {
+				'd8': ['e8', 'd9', 'e9'], 'e8': ['d8', 'f8', 'e9'],
+				'f8': ['e8', 'e9', 'f9'], 'd9': ['d8', 'e9', 'd10'],
+				'e9': ['d8', 'e8', 'f8', 'd9', 'f9', 'd10', 'e10', 'f10'],
+				'f9': ['f8', 'e9', 'f10'], 'd10': ['d9', 'e9', 'e10'],
+				'e10': ['e9', 'd10', 'f10'], 'f10': ['e9', 'f9', 'e10'],
+			},
+		}
 
-		return False
+		hideout = self.find_general(player)
+		moves = valid_squares[player][hideout]
+
+		in_checkmate = True
+
+		for move in moves:
+			# Return false if the general can escape by moving to any legal spaces
+			# Reset the board after each try
+
+			if not self._pieces[move] or (self._pieces[move].get_player() != player):
+				original_board = self._pieces.copy()
+
+				# Simulate an attempted escape
+				self._pieces[hideout] = None
+				self._pieces[move] = Piece(player, 'general')
+
+				self._pieces = original_board.copy()
+
+				if not self.is_in_check(player):
+					in_checkmate = False
+					self._pieces = original_board.copy()
+					break
+
+				self._pieces = original_board.copy()
+
+			# If the general can't escape, try all possible moves for all the general's pieces
+			# After each one, set in_checkmate to false if the general isn't in check
+			if in_checkmate:
+				for square, piece in self._pieces.items():
+					if piece and piece.get_player() == player:
+
+						for square2, piece2 in self._pieces.items():
+							if not piece2 or (piece2 and piece2.get_player() != player):
+								if self.legal_move(piece, square, square2):
+									# Simulate an attempted intervention
+									original_board2 = self._pieces.copy()
+
+									self._pieces[square] = None
+									self._pieces[square2] = piece
+
+									if not self.is_in_check(player):
+										self.print_board()
+										in_checkmate = False
+										self._pieces = original_board2.copy()
+										break
+
+									self._pieces = original_board2.copy()
+
+
+			if in_checkmate:
+				if self._turn == 'blue':
+					self._game_state = 'RED_WON'
+				elif self._turn == 'red':
+					self._game_state = 'BLUE_WON'
+
+		return in_checkmate
 
 	def make_move(self, a, b):
 		"""Takes two strings that represent squares such as 'a2' and 'g7'
 		and moves the piece from the first square into the second square,
 		if possible. Returns true if the move is successful, false otherwise."""
+		# Check if there is an actual piece being moved
+		if not self._pieces[a]:
+			return False
+
 		# Check if the game is finished
 		if self._game_state != 'UNFINISHED':
 			return False
+
+		piece_a = self._pieces[a].get_rank()
+
+		if self._pieces[b]:
+			piece_b = self._pieces[b].get_rank()
+		else:
+			piece_b = "None"
+
+		self.print_board()
+
+		print("\n\nAttempting   " + a + " (" + piece_a + ")" +
+			  ' --> ' + b + "(" + piece_b + ")" + "\n")
 
 		piece = self._pieces[a]
 		target = self._pieces[b]
@@ -504,12 +581,24 @@ class JanggiGame:
 		if piece.get_player() != self._turn:
 			return False
 
+		# Check if the player is passing their turn (only allowed if not in check)
+		if a == b and not self.is_in_check(self._turn):
+			if self._turn == 'blue':
+				self._turn = 'red'
+
+			elif self._turn == 'red':
+				self._turn = 'blue'
+			return True
+
 		# Check if the player has a piece in the intended square
 		if target and self._turn == target.get_player():
 			return False
 
 		# Check if the move is legal
-		if self.legal_move(piece, a, b):
+		if not self.legal_move(piece, a, b):
+			return False
+
+		else:
 
 			# MOVE THE PIECE
 			self._pieces[a] = None
@@ -521,57 +610,12 @@ class JanggiGame:
 			elif self._turn == 'red':
 				self._turn = 'blue'
 
-			# TODO implement checkmate
-			"""
-			if self.is_in_checkmate(self._turn):
-				if self._turn == 'blue':
-					self._game_state = 'RED_WON'
-				if self._turn == 'red':
-					self._game_state = 'BLUE_WON'
-			"""
+			# SEE IF THE GAME IS WON
+			if self.is_in_check(self._turn):
+				if self.is_in_checkmate(self._turn):
+					if self._turn == 'blue':
+						self._game_state = 'RED_WON'
+					if self._turn == 'red':
+						self._game_state = 'BLUE_WON'
 
 			return True
-
-
-"""
-DETAILED TEXT DESCRIPTIONS OF HOW TO HANDLE THE SCENARIOS
-1. A call to JanggiGame() instantiates a new game and initializes the board.
-The board is represented as a dictionary with keys being the squares of the
-board: 'a1', 'b1', ..., 'h10', 'i10'. The value for each key in the board
-is the piece on that space, or None if the space is empty.
-
-2. Pieces are represented at a given location through the values of the
-Board dictionary.
-
-3. Make_move first checks to be sure the game is not over, that it is the
-correct player's turn, and that there is not a piece from the same team
-in the intended square. It then calls legal_move, which validates a given move
-by comparing its start and end coordinates to the movement pattern for the
-provided piece's rank.
-
-4. If legal_move returns true, the dictionary value for the intended square
-will be set to the moved piece, regardless of what value is currently there.
-This way, if an opponent's piece was there, it will be removed from the board.
-
-5. The JanggiGame has a data member _turn which defaults to 'blue'. If
-legal_move returns True (during make_move), then _turn will be set to the
-opposite team.
-
-6. Checkmate will first check if any of opposing pieces can legally move
-to the position the General is currently in (using in_check). 
-If so, it will check to see if any of the threatened General's other pieces 
-can legally move to the threatening piece's square to save the general. 
-If not, it will then sequentially check the each square the General can 
-legally move to and check whether the General would be in check there (using 
-in_check). Thus, if the General IS in check AND none of the general's pieces 
-can take the threatening piece AND the General would be in check after all 
-possible legal moves, THEN the player is in checkmate.
-
-7. After each move, the game will see if the opposing player is in checkmate.
-If is_in_checkmate returns True, the JanggiGame's _game_state will update
-accordingly.
-"""
-
-
-
-
