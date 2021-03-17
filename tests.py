@@ -206,7 +206,6 @@ class TestMakeMove(unittest.TestCase):
 		self.assertEqual(game._pieces['d10'].get_player(), 'blue')
 
 		self.assertTrue(game.make_move('e2', 'e3'))
-		game.print_board()
 
 	def test_move_cannon(self):
 		game = JanggiGame()
@@ -247,13 +246,10 @@ class TestMakeMove(unittest.TestCase):
 		game._pieces['f4'] = Piece('red', 'chariot')
 
 		self.assertTrue(game.is_in_check('blue'))
-		game.print_board()
 
 		game._pieces['e6'] = None
 		game._pieces['e5'] = Piece('red', 'cannon')
 		game._pieces['e8'] = Piece('blue', 'soldier')
-		print('\n\n\n\n\n')
-		game.print_board()
 
 		game.is_in_check('blue')
 

@@ -534,7 +534,6 @@ class JanggiGame:
 									self._pieces[square2] = piece
 
 									if not self.is_in_check(player):
-										self.print_board()
 										in_checkmate = False
 										self._pieces = original_board2.copy()
 										break
@@ -558,37 +557,32 @@ class JanggiGame:
 		if not self._pieces[a]:
 			return False
 
+		else:
+			piece = self._pieces[a]
+
+		target = self._pieces[b]
+
 		# Check if the game is finished
 		if self._game_state != 'UNFINISHED':
 			return False
-
-		piece_a = self._pieces[a].get_rank()
-
-		if self._pieces[b]:
-			piece_b = self._pieces[b].get_rank()
-		else:
-			piece_b = "None"
-
-		self.print_board()
-
-		print("\n\nAttempting   " + a + " (" + piece_a + ")" +
-			  ' --> ' + b + "(" + piece_b + ")" + "\n")
-
-		piece = self._pieces[a]
-		target = self._pieces[b]
 
 		# Check if the right player i playing
 		if piece.get_player() != self._turn:
 			return False
 
 		# Check if the player is passing their turn (only allowed if not in check)
-		if a == b and not self.is_in_check(self._turn):
-			if self._turn == 'blue':
-				self._turn = 'red'
+		if a == b:
+			if self.is_in_check(self._turn):
+				return False
 
-			elif self._turn == 'red':
-				self._turn = 'blue'
-			return True
+			else:
+				if self._turn == 'blue':
+					self._turn = 'red'
+
+				elif self._turn == 'red':
+					self._turn = 'blue'
+
+				return True
 
 		# Check if the player has a piece in the intended square
 		if target and self._turn == target.get_player():
